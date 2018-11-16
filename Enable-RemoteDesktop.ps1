@@ -10,6 +10,8 @@
    Author: Steffen Herlevsen
    Version: 1.0
    CreationDate: 16.11.2018
+   Save it as "Enable-RemoteDesktop.psm1"  in "%ProgramFiles%\WindowsPowerShell\Modules\Enable-RemoteDesktop\" to have it automatically loaded in powershell
+
 .EXAMPLE
    Enable-RemoteDesktop -computername "CL1" -credentials (get-credentials)
 .EXAMPLE
