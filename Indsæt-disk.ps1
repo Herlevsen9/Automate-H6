@@ -1,3 +1,4 @@
+# Bruges til fx. Filserver når der indsættes en datadisk
 # Finder alle diske, der står til "raw"
 Get-Disk | Where partitionstyle -eq 'raw' |
 
