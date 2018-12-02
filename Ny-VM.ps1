@@ -1,44 +1,44 @@
 # Skal laves til en funktion
 
-#Cpu Cores in the VM
+# Specifikationer til VM'en
+#Cpu Cores
 $CpuCount=2
-#Ram Size
+#Ram Størrelse
 $RAMCount=1GB
-#VMName , will also become the Computer Name
+#VMNavn , vil også blive til OSnavn
 $Name="Test"
-#IP Address
-$IPDomain="192.168.0.1"
-#Default Gateway to be used
+#IP Addresse
+$IPDomain="192.168.0.10"
+#Default Gateway
 $DefaultGW="192.168.0.254"
 #DNS Server
 $DNSServer="192.168.0.1"
 #DNS Domain Name
 $DNSDomain="LME.DK"
-#Hyper V Switch Name
+#Hyper V Switch Navn
 $SwitchNameDomain="ExternalSwitch"
-#Set the VM Domain access NIC name
+#Netværksadapternavn
 $NetworkAdapterName="NIC1"
-#User name and Password
+#Brugernavn og kodeord
 $AdminAccount="Administrator"
 $AdminPassword="P@ssw0rd"
-#Org info
+#Organisationsinformation
 $Organization="Logging Made Easy"
 #This ProductID is actually the AVMA key provided by MS
 $ProductID="TMJ3Y-NTRTM-FJYXT-T22BY-CWG3J"
 #Where's the VM Default location? You can also specify it manually
 $Path= Get-VMHost |select VirtualMachinePath -ExpandProperty VirtualMachinePath
-#Where should I store the VM VHD?, you actually have nothing to do here unless you want a custom name on the VHD
+# Virtuel HDD sti
 $VHDPath=$Path + $Name + "\" + $Name + ".vhdx"
-#Where are the folders with prereq software ?
+# Foldere til automationsfiler
 $StartupFolder="$env:SystemDrive\HyperV"
-$TemplateLocation="$env:SystemDrive\HyperV\Template\Template2016.vhdx"
-$UnattendLocation="$env:SystemDrive\HyperV\Template\unattend.xml"
+$TemplateLocation="$env:SystemDrive\Hyper-V\GoldenImage\GoldenImage.vhdx"
+$UnattendLocation="$env:SystemDrive\Hyper-V\GoldenImage\unattend.xml"
  
-#Part 1 Complete-------------------------------------------------------------------------------#
+#Part 1 færdig-------------------------------------------------------------------------------#
  
 #Part 2 Initialize---------------------------------------------------------------------------------#
-#Start the Party!
-#Let's see if there are any VM's with the same name if you actually find any simply inform the user
+#Kontroller om VMnavn findes i forvejen, hvis der er skal brugeren blot informeres
 $VMS=Get-VM
 Foreach($VM in $VMS)
 {
@@ -49,14 +49,14 @@ Foreach($VM in $VMS)
  }
 }
  
-#Create the VM
+#Opret VM
 New-VM -Name $Name -Path $Path  -MemoryStartupBytes $RAMCount  -Generation 2 -NoVHD
- 
-#Remove any auto generated adapters and add new ones with correct names for Consistent Device Naming
+
+# Fjern de autogenerede netværksadaptere og tilføj en ny med det korrekte navn
 Get-VMNetworkAdapter -VMName $Name |Remove-VMNetworkAdapter
 Add-VMNetworkAdapter -VMName $Name -SwitchName $SwitchNameDomain -Name $NetworkAdapterName -DeviceNaming On
  
-#Start and stop VM to get mac address, then arm the new MAC address on the NIC itself
+# Start og stop VM for at få MAC adresse, sæt den herefter på selve netværksadapteren
 start-vm $Name
 sleep 5
 stop-vm $Name -Force
