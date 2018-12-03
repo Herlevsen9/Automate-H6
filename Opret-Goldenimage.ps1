@@ -11,6 +11,7 @@ $RAMstart = 1GB
 $RAMminimum = 512MB
 $RAMmax = 4GB
 $Cpuantal=2
+$DVDsti = "$env:SystemDrive\iso\SW_DVD9_Win_Pro_Ent_Edu_N_10_1803_64BIT_English_-3_MLF_X21-82160.ISO"
 
 New-VM -Name $VMnavn -Path $Sti  -MemoryStartupBytes $RAMstørrelse  -Generation 2 -NewVHDPath $HDDsti -NewVHDSizeBytes $HDDstørrelse
 
@@ -19,6 +20,13 @@ Get-VM -Name $VMnavn | Set-VM -ProcessorCount $Cpuantal -DynamicMemory $True -Me
 -MemoryMinimumBytes $RAMminimum -MemoryMaximumBytes $RAMmax
 
 # kontroller indstillingerne
+
+# Indsæt ISO i DVD drev
+Get-VM -Name $VMnavn | Set-VMDvdDrive $DVDsti
+
+# Find syntaks i denne guide: http://itproctology.blogspot.com/2013/10/modifying-hyper-v-generation2-vm-boot.html
+# Sæt VM til at boote fra DVD
+Set-VMFirmware $VMnavn -FirstBootDevice 
 
 # Start VM
 Start-VM $VMnavn
