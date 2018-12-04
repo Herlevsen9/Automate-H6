@@ -1,0 +1,35 @@
+# .synopsis
+# Overfører filer til VM inden den bliver syspreppet
+
+$fil_source = "C:\install\FOG"
+
+# Hent VM navn
+$VMnavn = Get-VM -Name *FOG-LEGACY* | Select-Object Name -ExpandProperty name
+
+# Sti til virtuel HDD
+$VHDsti = Get-childitem -Recurse -Path C:\HYPERV\ | Where-Object {$_.Name -match "$VMnavn.vhdx"} | Select-Object Fullname -ExpandProperty Fullname
+
+# Stop VM
+stop-vm $VMnavn
+
+# Mount virtuel HDD
+Mount-VHD -Path $VHDsti
+
+#Find drev bogstav
+$VolumeDrevbogstav = Get-DISKIMAGE $VHDsti | get-disk | Get-Partition | Get-Volume | ?{$_.FilesystemLabel -ne "Recovery"} | Select-Object Driveletter -Expandproperty DriveLetter
+
+# Destinationssti for filerne
+$fil_destination = "$VolumeDrevbogstav"+":\Install\"
+
+# Overfør filerne
+Copy-item -Path $fil_source -Destination $fil_destination -Recurse -force
+
+Dismount-VHD -Path $VHDsti
+
+# Start VM
+Start-VM $VMnavn
+
+
+
+
+
