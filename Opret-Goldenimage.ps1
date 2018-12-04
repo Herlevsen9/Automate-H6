@@ -1,5 +1,7 @@
 # script til at oprette MASTER/Goldenimage VM, der syspreppes og andre VM'er bliver oprettet ud fra
 
+# Link til Lab oprettelse: https://blogs.msmvps.com/russel/category/hyper-v/
+
 # Link til DVD drive https://mcpmag.com/articles/2017/03/09/creating-a-vm-in-hyperv-using-ps.aspx
 # Efter oprettele, følg guide for at kontrollere indstillingerne er sat, Link: https://www.vembu.com/blog/automating-hyper-v-virtual-machine-deployment-powershell/
 
