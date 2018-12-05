@@ -1,6 +1,7 @@
 # script til at oprette MASTER/Goldenimage VM, der syspreppes og andre VM'er bliver oprettet ud fra
 
-# Link til DVD drive https://mcpmag.com/articles/2017/03/09/creating-a-vm-in-hyperv-using-ps.aspx
+# Prøv med VHDX boot installation istedet, copy ISO + unattend til VHDX og boot fra denne
+
 # Efter oprettele, følg guide for at kontrollere indstillingerne er sat, Link: https://www.vembu.com/blog/automating-hyper-v-virtual-machine-deployment-powershell/
 
 $VMnavn = "Goldenimage"
@@ -11,21 +12,18 @@ $RAMstart = 1GB
 $RAMminimum = 512MB
 $RAMmax = 4GB
 $Cpuantal=2
-$DVDsti = "$env:SystemDrive\iso\SW_DVD9_Win_Pro_Ent_Edu_N_10_1803_64BIT_English_-3_MLF_X21-82160.ISO"
+$DVDsti = "$env:SystemDrive\iso\2016_x64_EN_Eval.iso"
 
 New-VM -Name $VMnavn -Path $Sti  -MemoryStartupBytes $RAMstart  -Generation 2 -NewVHDPath $HDDsti -NewVHDSizeBytes $HDDstørrelse
 
 # Sæt CPU
 set-vm -Name $VMnavn -ProcessorCount $Cpuantal -DynamicMemory -MemoryStartupBytes $RAMstart `
--MemoryMinimumBytes $RAMminimum -MemoryMaximumBytes $RAMmax -
-
-# kontroller indstillingerne
+-MemoryMinimumBytes $RAMminimum -MemoryMaximumBytes $RAMmax
 
 # Tilføj DVD drev med ISO
 Add-VMDvdDrive -VMName $VMnavn -Path $DVDsti
 
-
-# Find syntaks i denne guide: http://itproctology.blogspot.com/2013/10/modifying-hyper-v-generation2-vm-boot.html
+# kontroller indstillingerne
 
 $VMNetværksadapter = Get-VMNetworkAdapter -VMName $VMnavn
 
@@ -36,10 +34,17 @@ $VMDvddrev = Get-VMDvdDrive -VMName $VMnavn
 # Sæt VM's bootorder til HDD, dernæst netværksadapter
 Set-VMFirmware -VMname $VMnavn -BootOrder $VMHarddisk, $VMDvddrev, $VMNetværksadapter
 
-Get-VMFirmware $VMnavn | select * | Sort-Object
-
 # Sæt VM til at boote fra DVD første gang
 Set-VMFirmware -VMname $VMnavn -FirstBootDevice $VMDvddrev
+
+# Sæt VM i VLAN 20
+# Get-VM -Name $VMnavn | Get-VMNetworkAdapter -Name "Network Adapter" | Set-VMNetworkAdapterVlan -Access -VlanId 20
+
+# Enable Guest Services til VM
+Enable-VMIntegrationService -VMName $VMnavn -Name "Guest Service Interface"
+
+# Disable Checkpoints
+Set-VM -Name $VMnavn -CheckpointType Disabled
 
 # Færdiggør installation, tryk på en vilkårlig tast for acceptere boot fra DVD
 vmconnect.exe $env:COMPUTERNAME $VMnavn 
@@ -60,3 +65,4 @@ Start-VM $VMnavn
 # Kør sysprep kommando med shutdown
 
 # VM er ny færdig og klar til at blive clonet
+
