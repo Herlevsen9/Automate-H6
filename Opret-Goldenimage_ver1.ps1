@@ -1,8 +1,5 @@
 # script til at oprette MASTER/Goldenimage VM, der syspreppes og andre VM'er bliver oprettet ud fra
 
-# Prøv med VHDX boot installation istedet, copy ISO + unattend til VHDX og boot fra denne
-# Link: https://gallery.technet.microsoft.com/scriptcenter/Convert-WindowsImageps1-0fe23a8f
-
 # Efter oprettele, følg guide for at kontrollere indstillingerne er sat, Link: https://www.vembu.com/blog/automating-hyper-v-virtual-machine-deployment-powershell/
 
 $VMnavn = "Goldenimage"
