@@ -1,48 +1,175 @@
-# Opret AD bruger funktion, hvor eneste input er Fornavn og Efternavn
+<#
+.Synopsis
+   Opretter en AD bruger
+.DESCRIPTION
+   Opretter en Active Directory bruger ud fra Fornavn, Mellemnavn, Efternavn og Afdeling.
+   Kontrollere om SamAccountName findes i forvejen
+   eksistere SamAccountName køres der 3 forsøg med ekstra bogstaver fra fornavn eller mellemnavn
+   for at finde et unikt SamAccountName
+.EXAMPLE
+   Opret-ADbruger -Fornavn Peter -Efternavn Hansen -Afdeling Ledelse
+.EXAMPLE
+   Opret-ADbruger -Fornavn Jens -Mellemnavn Ole -Efternavn Petersen -Afdeling IT-Afdeling -kodeord DetLangeK0deord
+.COMPONENT
+   Kræver Powershell ActiveDirectory modulet
+.ROLE
+   The role this cmdlet belongs to
+.FUNCTIONALITY
+   Opretter AD brugere til en større produktion, hvor det ikke er muligt at kende alle SamAccountNames
+#>
+function Opret-ADbruger
+{
+    [CmdletBinding()]
+    Param
+    (
+         # Fornavn hjælpe beskrivelse
+        [Parameter(Mandatory=$true, 
+                   ValueFromPipeline=$true,
+                   Position=0)]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern("[a-å]")]
+        [String] 
+        $Fornavn,
 
-# .Example
-# Opret-ADbruger -Fornavn [String/Mandatory] -Mellemnavn {String} -Efternavn [String/Mandatory]
+         # Mellemnavn hjælpe beskrivelse
+        [Parameter(ValueFromPipeline=$true,
+                   Position=1)]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern("[a-å]")]
+        [String] 
+        $Mellemnavn,
 
-# Deklarer arguments
-[String]=Fornavn
-[Mandatory]
-[String]=Mellemnavn
-[String]=Efternavn
-[Mandatory]
+        # Efternavn hjælpe beskrivelse
+        [Parameter(Mandatory=$true,
+                   ValueFromPipeline=$true,
+                   Position=2)]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern("[a-å]")] 
+        [String]
+        $Efternavn,
 
-# Opret AD brugerID
-? skal det være efternavn + første bogstav af Fornavn
-# Eller
-? skal det være første bogstav af Fornavn + efternavn
-$brugerID = split (første bogstav af fornavn) + $Efternavn
+        # Kodeord hjælpe beskrivelse
+        [Parameter(ValueFromPipeline=$true)]         
+        [String]
+        $Kodeord="K0deord!",
 
-# Kontroller om brugerID eksistere i allerede
-$findes = Get-ADuser -identity $brugerID
+         # Afdeling hjælpe description
+        [Parameter(Mandatory=$true, 
+                   ValueFromPipeline=$true)]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [ValidateSet("Ledelse", "Salgsafdeling", "Indkøbsafdeling","Personaleafdeling",
+        "Administrationsafdeling","Økonomiafdeling","Økonomiafdeling","IT-Afdeling")]
+        [String]
+        $Afdeling,
 
-# Hvis brugerID eksistere allerede, opret et nyt
-if ($findes $true) {
-$brugerID = $null
+        # Titel hjælpe description
+        [Parameter(ValueFromPipeline=$true)]
+        [String]
+        $Titel
+    )
 
-# Hvis Mellemnavn er tomt, brug da de 2 første bogstaver af fornavn
-if ($Mellemnavn $null) {
-
-    $brugerID = split (2 første bogstaver af Fornavn) + $Efternavn
+    Begin
+    {
+    $BrugerID = $Fornavn.ToLower().Substring(0,1) + $Efternavn.ToLower()
     
-        # Opret Displayname
-        $Displayname = $Fornavn + " " + $Efternavn
+    # $ADbrugere = Get-aduser * | select SamAccountName
+    $ADbrugere = @("hpetersen","phansen","hhansen","hjpetersen")
+
+    # Kontroller om BrugerID findes i forvejen
+    $Findes_bruger = $ADbrugere -match $BrugerID
+
+if ($Findes_bruger -ne $BrugerID)
+ {
+     Write-Verbose -Message "$BrugerID findes ikke. Opretter bruger" -Verbose
+     
+ }
+
+ if ($Findes_bruger -eq $BrugerID)
+ {
+     Write-Verbose -Message "$BrugerID findes i forvejen" -Verbose
+
+     # Kontroller om der er et Mellemnavn, i givent tilfælde, kør BrugerID oprettelse med efternavn
+     if ($Mellemnavn -ne $null)
+    {
+    
+     Write-Verbose -Message "Opretter nyt BrugerID med Fornavn, Mellemnavn og Efternavn" -Verbose
+     # Slet hvad der tidligere stod i BrugerID
+     $BrugerID = $null
+
+     # Opret BrugerID med første bogstav af fornavn + første bogstav af mellemnavn + efternavn
+     $BrugerID = $Fornavn.ToLower().Substring(0,1) + $Mellemnavn.ToLower().Substring(0,1) + $Efternavn.ToLower()
+
+         # Kontroller for 3. gang om BrugerID findes
+         if (($ADbrugere -match $BrugerID) -eq $BrugerID)
+          {
+          Write-Verbose -Message "$BrugerID findes i forvejen" -Verbose
+          Write-Verbose -Message "Opretter nyt BrugerID med Fornavn, Mellemnavn(2 bogstaver) og Efternavn" -Verbose
+         
+          # Slet hvad der tidligere stod i BrugerID
+          $BrugerID = $null
+         
+          # Opret BrugerID med første bogstav af fornavn + 2 første bogstaver af mellemnavn + efternavn
+          $BrugerID = $Fornavn.ToLower().Substring(0,1) + $Mellemnavn.Substring(0,2)  + $Efternavn.ToLower()
+          }
+    }
+
+             if ($Mellemnavn -eq $null)
+             {
+                                
+                Write-Verbose -Message "Opretter nyt BrugerID med Fornavn (2 bogstaver) og Efternavn" -Verbose
+                # Slet hvad der tidligere stod i BrugerID
+                $BrugerID = $null
+              
+                # Opret BrugerID med 2 første bogstaver af fornavn  + efternavn
+                $BrugerID = $Fornavn.ToLower().Substring(0,2) + $Efternavn.ToLower()
+
+                  if (($ADbrugere -match $BrugerID) -eq $BrugerID)
+                  {
+                  Write-Verbose -Message "$BrugerID findes i forvejen" -Verbose
+                  Write-Verbose -Message "Opretter nyt BrugerID med Fornavn (3 bogstaver) og Efternavn" -Verbose 
+                 
+                  # Opret BrugerID med 2 første bogstaver af fornavn  + efternavn
+                  $BrugerID = $Fornavn.ToLower().Substring(0,3) + $Efternavn.ToLower()
+                  }  
+             }
+ }
+
+ 
+
+    }
+    Process
+    {
+    # Opret variabel for hele navnet
+    if ($Mellemnavn -eq $null)
+    {
+        $Hele_Navn = $Fornavn + " " + $Efternavn
+    }
+    
+    if ($Mellemnavn -ne $null)
+    {
+        $Hele_Navn = $Fornavn + " " + $Mellemnavn + " " + $Efternavn
+    }
+    
+    $UPN = $BrugerID + "@lme.dk"
+    $Hele_Navn
+    $BrugerID
+
+    <# Tilføj underliggende til produktion
+    New-ADUser -Name $Hele_Navn -GivenName $Fornavn -Surname $Efternavn -SamAccountName $BrugerID -UserPrincipalName $UPN `
+    -Path "OU=$Afdeling,OU=Enabled Users,OU=User Accounts,DC=AD,DC=LME,DC=DK" -AccountPassword $kodeord -Enabled $true `
+    -Title $titel -EmailAddress $UPN
+    #>
+    }
+    End
+    {
+    }
 }
 
-# Hvis Mellemnavn ikke er tomt, opret da et brugerID med Mellemnavn
-if !($Mellemnavn $null) {
-
-    $brugerID = split (første bogstav af $Fornavn) + (første bogstav af $Mellemnavn) +Efternavn
-
-    # Opret Displayname med Mellemnavn
-    $Displayname = $Fornavn + " " + $Mellemnavn + " " + $Efternavn
-}
-
-}
-
-# Opret resterende arguments til ADbruger
-$mail = $brugerID + '@e219.lme.dk'
-
+# Prøv en anden Version/Branch med en while-do
+# Hvor Substring øges med en hver gang, så længe den holder sig inden fornavn/mellemnavn's længde
+# .Substring(0,$a+1)
+# $BrugerID = $Fornavn.ToLower().Substring(0,1) + $Mellemnavn.ToLower().Substring(0,1) + $Efternavn.ToLower()
