@@ -52,6 +52,9 @@ Start-Sleep -Seconds 5
 # Start VM
 Start-VM $VMnavn
 
+# Pause til Windows installation er færdiggjort
+pause
+
 # Sluk VM efter endt installation
 Stop-VM $VMnavn
 
