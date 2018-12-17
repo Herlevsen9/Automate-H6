@@ -130,9 +130,9 @@ function Clone-VM
         # Virtuel HDD sti
         $VHDPath=$Path + $VMnavn + "\" + $VMnavn + ".vhdx",
         # Foldere til automationsfiler
-        $StartupFolder="$env:SystemDrive\HyperV",
-        $TemplateLocation="$env:SystemDrive\HyperV\GoldenImage\GoldenImage.vhdx",
-        $UnattendLocation="$env:SystemDrive\Install\Scripts\autounattend.xml"
+        $StartupFolder="$env:SystemDrive\Hyper-V",
+        $TemplateLocation="$env:SystemDrive\Hyper-V\GoldenImage\GoldenImage.vhdx",
+        $UnattendLocation="$env:SystemDrive\Install\Scripts\unattend.xml"
 
     )
 
@@ -192,7 +192,7 @@ function Clone-VM
     #Construct the drive letter of the mounted VHD Drive
     $DriveLetter="$VolumeDriveLetter"+":"
     #Copy the unattend.xml to the drive
-    Copy-Item $NewXML $DriveLetter\unattend.xml
+    Copy-Item $NewXML "$DriveLetter\autounattend.xml"
     #Dismount the VHD
     Dismount-Vhd -Path $VHDPath
        
