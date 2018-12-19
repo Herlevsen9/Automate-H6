@@ -61,7 +61,14 @@ $word_app.Quit()
 $PDF_til_feedback = Get-ChildItem -Path $documents_path -Filter *.pdf 
 
 # Opret mail til Jan og Finn
+$Afsender = "Fornavn Efternav <navn@gmail.com>"
+$Mail_modtager = "jsch@tec.dk"
+$Body = "Hej
+Venligst se vedhæftet filer for feedback.
 
+Mvh. Gruppe 1"
 
+$Mailserver = ""
 
 # Send mail
+Send-MailMessage -From $Afsender  -To $Mail_modtager -Subject "Gruppe 1 " -Body $body -Encoding UTF8 -Attachments $PDF_til_feedback -SmtpServer $Mailserver
