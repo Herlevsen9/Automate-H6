@@ -63,6 +63,7 @@ $PDF_til_feedback = Get-ChildItem -Path $documents_path -Filter *.pdf
 # Opret mail til Jan og Finn
 $Afsender = "Fornavn Efternav <navn@gmail.com>"
 $Mail_modtager = "jsch@tec.dk"
+$Emne = "Feedback"
 $Body = "Hej
 Venligst se vedhæftet filer for feedback.
 
@@ -70,5 +71,18 @@ Mvh. Gruppe 1"
 
 $Mailserver = ""
 
-# Send mail
-Send-MailMessage -From $Afsender  -To $Mail_modtager -Subject "Gruppe 1 " -Body $body -Encoding UTF8 -Attachments $PDF_til_feedback -SmtpServer $Mailserver
+# Send mail via powershell
+Send-MailMessage -From $Afsender -To $Mail_modtager -Subject $Emne -Body $body -Encoding UTF8 -Attachments $PDF_til_feedback -SmtpServer $Mailserver
+
+# Send mail via outlook
+$Outlook = New-Object -ComObject Outlook.Application
+$outfileName = "C:\Users\sth\Desktop\test.png"
+$Mail = $Outlook.CreateItem(0)
+$Mail.To = $Mail_modtager
+$Mail.Subject = $Emne
+$Mail.Body =$Body
+$Mail.Attachments.Add($PDF_til_feedback)
+$Mail.Display()
+# $Mail.Display()
+
+
