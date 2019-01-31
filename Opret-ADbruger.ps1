@@ -9,7 +9,7 @@
 .EXAMPLE
    Opret-ADbruger -Fornavn Peter -Efternavn Hansen -Afdeling Ledelse
 .EXAMPLE
-   Opret-ADbruger -Fornavn Jens -Mellemnavn Ole -Efternavn Petersen -Afdeling IT-Afdeling -kodeord DetLangeK0deord
+   Opret-ADbruger -Fornavn Jens -Mellemnavn Ole -Efternavn Petersen -Afdeling IT -kodeord DetLangeK0deord
 .COMPONENT
    Kræver Powershell ActiveDirectory modulet
 .ROLE
@@ -61,8 +61,7 @@ function Opret-ADbruger
                    ValueFromPipeline=$true)]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [ValidateSet("Ledelse", "Salgsafdeling", "Indkøbsafdeling","Personaleafdeling",
-        "Administrationsafdeling","Økonomiafdeling","Økonomiafdeling","IT-Afdeling")]
+        [ValidateSet("Ledelse","HR","Konsulenter","Økonomi","IT")]
         [String]
         $Afdeling,
 
@@ -160,7 +159,7 @@ if ($Findes_bruger -ne $BrugerID)
 
     <# Tilføj underliggende til produktion
     New-ADUser -Name $Hele_Navn -GivenName $Fornavn -Surname $Efternavn -SamAccountName $BrugerID -UserPrincipalName $UPN `
-    -Path "OU=$Afdeling,OU=Enabled Users,OU=User Accounts,DC=AD,DC=LME,DC=DK" -AccountPassword $kodeord -Enabled $true `
+    -Path "OU=$Afdeling,OU=Enabled Users,OU=SpecterOps,DC=AD,DC=LME,DC=DK" -AccountPassword $kodeord -Enabled $true `
     -Title $titel -EmailAddress $UPN
     #>
     }
