@@ -127,9 +127,8 @@ if ($ADbrugere -notcontains $BrugerID)
           if ($ADbrugere -contains $BrugerID)
           {
               
-              Write-Verbose -Message "Der kunne ikke oprettes et unikt BrugerID" -Verbose
-              Write-Verbose -Message "Opret manuelt et BrugerID, evt med tal" -Verbose
-              Exit
+              Write-Error -Message "Der kunne ikke oprettes et unikt BrugerID. Opret manuelt et BrugerID, evt med tal" -Verbose
+                            
           }
 
           # Opret navn ud fra Fornavn og Efternavn
@@ -165,9 +164,8 @@ if ($ADbrugere -notcontains $BrugerID)
                       if ($ADbrugere -contains $BrugerID)
                       {
                           
-                          Write-Verbose -Message "Der kunne ikke oprettes et unikt $BrugerID" -Verbose
-                          Write-Verbose -Message "Opret manuelt et $BrugerID, evt med tal" -Verbose
-                          # Exit
+                          Write-Error -Message "Der kunne ikke oprettes et unikt BrugerID. Opret manuelt et BrugerID, evt med tal" -Verbose
+                 
                       }
 
                       # Opret navn ud fra Fornavn, Mellemnavn og Efternavn
