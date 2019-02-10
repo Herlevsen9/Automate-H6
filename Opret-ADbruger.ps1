@@ -54,7 +54,7 @@ function Opret-ADbruger
         # Kodeord hjælpe beskrivelse
         [Parameter(ValueFromPipeline=$true)]         
         [String]
-        $Kodeord="K0deord!",
+        $Kodeord='Pa$$w0rd',
 
          # Afdeling hjælpe description
         [Parameter(Mandatory=$true, 
@@ -73,102 +73,122 @@ function Opret-ADbruger
 
     Begin
     {
-    $BrugerID = $Fornavn.ToLower().Substring(0,1) + $Efternavn.ToLower()
-    
-    # $ADbrugere = Get-aduser * | select SamAccountName
-    $ADbrugere = @("hpetersen","phansen","hhansen","hjpetersen")
 
-    # Kontroller om BrugerID findes i forvejen
-    $Findes_bruger = $ADbrugere -match $BrugerID
+#Krypter kodeordet
+$Kodeord_secure = $Kodeord | ConvertTo-SecureString -AsPlainText -Force -Verbose
 
-if ($Findes_bruger -ne $BrugerID)
+$ADbrugere = Get-aduser -filter * | select SamAccountName -ExpandProperty SamAccountName
+
+$BrugerID = $Fornavn.ToLower().Substring(0,1) + $Efternavn.ToLower() 
+
+# Kontroller om bruger findes
+if ($ADbrugere -notcontains $BrugerID)
  {
      Write-Verbose -Message "$BrugerID findes ikke. Opretter bruger" -Verbose
-     
+     #Opret variabel for hele navnet uden mellemnavn
+     if ([string]::IsNullOrEmpty($Mellemnavn))
+     {
+         $Hele_Navn = $Fornavn + " " + $Efternavn
+     }
+
+     #Opret variabel for hele navnet med mellemnavn
+      if (-not ([string]::IsNullOrEmpty($Mellemnavn)))
+     {
+         $Hele_Navn = $Fornavn + " " + $Mellemnavn + " " + $Efternavn
+     }
  }
 
- if ($Findes_bruger -eq $BrugerID)
- {
-     Write-Verbose -Message "$BrugerID findes i forvejen" -Verbose
-
-     # Kontroller om der er et Mellemnavn, i givent tilfælde, kør BrugerID oprettelse med efternavn
-     if ($Mellemnavn -ne $null)
+    # Kontroller om BrugerID findes i forvejen
+    # Kontroller om Mellemnavn er null eller tomt, i givent tilfælde, kør BrugerID oprettelse med Fornavn og Efternavn
+    if (($ADbrugere -contains $BrugerID) -and [string]::IsNullOrEmpty($Mellemnavn))
     {
-    
-     Write-Verbose -Message "Opretter nyt BrugerID med Fornavn, Mellemnavn og Efternavn" -Verbose
-     # Slet hvad der tidligere stod i BrugerID
-     $BrugerID = $null
+        Write-Verbose -Message "$BrugerID findes i forvejen" -Verbose
+        Write-Verbose -Message "Mellemnavn er tomt, opretter BrugerID med Fornavn og Efternavn" -Verbose
 
-     # Opret BrugerID med første bogstav af fornavn + første bogstav af mellemnavn + efternavn
-     $BrugerID = $Fornavn.ToLower().Substring(0,1) + $Mellemnavn.ToLower().Substring(0,1) + $Efternavn.ToLower()
-
-         # Kontroller for 3. gang om BrugerID findes
-         if (($ADbrugere -match $BrugerID) -eq $BrugerID)
+         # Generer nyt BrugerID indtil det er unikt
+          # Brug et ekstra bogstav fra mellemnavn for hver genereringsomgang
+          $omgang = 0 
+          
+          do
           {
-          Write-Verbose -Message "$BrugerID findes i forvejen" -Verbose
-          Write-Verbose -Message "Opretter nyt BrugerID med Fornavn, Mellemnavn(2 bogstaver) og Efternavn" -Verbose
-         
-          # Slet hvad der tidligere stod i BrugerID
-          $BrugerID = $null
-         
-          # Opret BrugerID med første bogstav af fornavn + 2 første bogstaver af mellemnavn + efternavn
-          $BrugerID = $Fornavn.ToLower().Substring(0,1) + $Mellemnavn.Substring(0,2)  + $Efternavn.ToLower()
-          }
-    }
+              #Læg en til for hver omgang
+              $omgang ++
 
-             if ($Mellemnavn -eq $null)
-             {
-                                
-                Write-Verbose -Message "Opretter nyt BrugerID med Fornavn (2 bogstaver) og Efternavn" -Verbose
-                # Slet hvad der tidligere stod i BrugerID
-                $BrugerID = $null
+              # Opret nyt BrugerID
+              $BrugerID = $Fornavn.ToLower().Substring(0,$omgang) + $Efternavn.ToLower()
+              # Læg en til omgang (et ekstra bogstav i Fornavn)
+              }
+
+          # Bliv ved indtil enten BrugerID er unikt eller alle bogstaver i Fornavn er brugt
+          until (($ADbrugere -notcontains $BrugerID) -or ($omgang -eq ($Fornavn.Length)))
+
+          # Kontroller om Fornavn er brugt og BrugerID ikke er unikt
+          # Hvis det er tilfældet, afslut funktion
+          if ($ADbrugere -contains $BrugerID)
+          {
               
-                # Opret BrugerID med 2 første bogstaver af fornavn  + efternavn
-                $BrugerID = $Fornavn.ToLower().Substring(0,2) + $Efternavn.ToLower()
+              Write-Verbose -Message "Der kunne ikke oprettes et unikt BrugerID" -Verbose
+              Write-Verbose -Message "Opret manuelt et BrugerID, evt med tal" -Verbose
+              Exit
+          }
 
-                  if (($ADbrugere -match $BrugerID) -eq $BrugerID)
+          # Opret navn ud fra Fornavn og Efternavn
+          $Hele_Navn = $Fornavn + " " + $Efternavn
+
+    }
+
+                  # Kontroller om BrugerID findes i forvejen
+                  # Kontroller om Mellemnavn er null eller tomt, i givent tilfælde, kør BrugerID oprettelse med Fornavn, Efternavn og Efternavn
+                  if (($ADbrugere -contains $BrugerID) -and !([string]::IsNullOrEmpty($Mellemnavn)))
                   {
-                  Write-Verbose -Message "$BrugerID findes i forvejen" -Verbose
-                  Write-Verbose -Message "Opretter nyt BrugerID med Fornavn (3 bogstaver) og Efternavn" -Verbose 
-                 
-                  # Opret BrugerID med 2 første bogstaver af fornavn  + efternavn
-                  $BrugerID = $Fornavn.ToLower().Substring(0,3) + $Efternavn.ToLower()
-                  }  
-             }
- }
+                     
+                      Write-Verbose -Message "$BrugerID findes i forvejen" -Verbose
+                      Write-Verbose -Message "Opretter BrugerID med Fornavn, Mellemnavn og Efternavn" -Verbose
 
- 
+                      # Generer nyt BrugerID indtil det er unikt
+                      # Brug et ekstra bogstav fra mellemnavn for hver genereringsomgang
+                      $omgang = 0
+                      
+                       do
+                      {
+                          #Læg en til for hver omgang
+                          $omgang ++
 
-    }
-    Process
-    {
-    # Opret variabel for hele navnet
-    if ($Mellemnavn -eq $null)
-    {
-        $Hele_Navn = $Fornavn + " " + $Efternavn
-    }
+                          # Opret nyt BrugerID
+                          $BrugerID = $Fornavn.ToLower().Substring(0,1) + $Mellemnavn.ToLower().Substring(0,$omgang) + $Efternavn.ToLower()                                                  
+                      }
+                      # Bliv ved indtil enten BrugerID er unikt eller alle bogstaver i Mellemnavn er brugt
+                      until (($ADbrugere -notcontains $BrugerID) -or ($omgang -eq ($Mellemnavn.Length)))
+
+                      # Kontroller om Mellemnavnet er brugt og BrugerID ikke er unikt
+                      # Hvis det er tilfældet, afslut funktion
+                      if ($ADbrugere -contains $BrugerID)
+                      {
+                          
+                          Write-Verbose -Message "Der kunne ikke oprettes et unikt $BrugerID" -Verbose
+                          Write-Verbose -Message "Opret manuelt et $BrugerID, evt med tal" -Verbose
+                          # Exit
+                      }
+
+                      # Opret navn ud fra Fornavn, Mellemnavn og Efternavn
+                      $Hele_Navn = $Fornavn + " " + $Mellemnavn + " " + $Efternavn
+                  }
+
+    $UPN = $BrugerID + "@specterops.dk"
     
-    if ($Mellemnavn -ne $null)
-    {
-        $Hele_Navn = $Fornavn + " " + $Mellemnavn + " " + $Efternavn
-    }
-    
-    $UPN = $BrugerID + "@lme.dk"
-    $Hele_Navn
-    $BrugerID
-
-    <# Tilføj underliggende til produktion
     New-ADUser -Name $Hele_Navn -GivenName $Fornavn -Surname $Efternavn -SamAccountName $BrugerID -UserPrincipalName $UPN `
-    -Path "OU=$Afdeling,OU=Enabled Users,OU=SpecterOps,DC=AD,DC=LME,DC=DK" -AccountPassword $kodeord -Enabled $true `
+    -Path "OU=$Afdeling,OU=Enabled Users,OU=SpecterOps,DC=AD,DC=SPECTEROPS,DC=DK" -AccountPassword $kodeord_secure -Enabled $true `
     -Title $titel -EmailAddress $UPN
-    #>
+    
+
+     # Skal fjernes til slut    
+     if ($ADbrugere -contains $BrugerID)
+     { Write-Verbose -Message "$BrugerID ikke unikt" -Verbose }
+
+      if ($ADbrugere -notcontains $BrugerID)
+      { Write-Verbose -Message "$BrugerID er unikt" -Verbose }
     }
     End
     {
     }
 }
-
-# Prøv en anden Version/Branch med en while-do
-# Hvor Substring øges med en hver gang, så længe den holder sig inden fornavn/mellemnavn's længde
-# .Substring(0,$a+1)
-# $BrugerID = $Fornavn.ToLower().Substring(0,1) + $Mellemnavn.ToLower().Substring(0,1) + $Efternavn.ToLower()
